@@ -1,40 +1,60 @@
 # Sistema de Gestión y Control Luxury
 
-Versión web de la aplicación Flutter Luxury, recuperada de la compilación disponible en `Sistema_GestionyControlLuxury-main/luxury_app/build/web`.
+Aplicación Flutter conectada al proyecto **SBLuxury** de Supabase.
 
-## Qué contiene
+**Abrir aplicación:** https://andersonbg-hub.github.io/Sistema_GestionyControlLuxury/
 
-El archivo `luxury-web.zip` contiene la aplicación web compilada y sus recursos, conservando su estructura de carpetas. La copia encontrada en Descargas no incluía `lib/` ni `pubspec.yaml`; por eso este repositorio conserva la versión ejecutable web, no el proyecto fuente completo de Flutter.
+## Archivos del repositorio de publicación
 
-## Abrir la aplicación
+- `luxury-web.zip`: versión web compilada con la configuración de Supabase.
+- `luxury-flutter-fuente.zip`: proyecto Flutter editable, con `lib/`, `pubspec.yaml`, dependencias fijadas, configuración pública y pruebas.
+- `.github/workflows/publicar.yml`: publica automáticamente el contenido de `luxury-web.zip` en GitHub Pages cuando se actualiza `main`.
 
-La dirección de la aplicación en GitHub Pages es:
+Los siete archivos Dart originales se recuperaron de la tabla de fuentes de la caché Dart Kernel que acompañaba a la compilación. Se reconstruyeron los archivos de proyecto y la plataforma web. No se reemplazó la interfaz por otra aplicación.
 
-https://andersonbg-hub.github.io/Sistema_GestionyControlLuxury/
+## Conexión y acceso
 
-En **Settings → Pages**, seleccionar **GitHub Actions** como fuente. El flujo `.github/workflows/publicar.yml` descomprime la aplicación y la publica automáticamente cuando hay cambios en `main`. En GitHub Free el repositorio debe ser público.
+El archivo `config/supabase.public.json` contiene la URL y la clave **publishable** del proyecto. Flutter recibe esos valores al compilar; copiar un `.env` a la web publicada no configura por sí solo la aplicación.
 
-La aplicación se presenta como una demostración local: los cambios se conservan en cada navegador y no se envían a Supabase.
+En modo conectado, ingresar con una cuenta de **Supabase Auth** que tenga un perfil activo en `public.usuarios`, con el mismo UUID. El campo `rol` controla el espacio de trabajo: `ADMINISTRADOR`, `GERENTE`, `COCINERO`, `JEFE_COCINA`, `MESERO` o `CAJERO`.
 
-## Cómo se preparó
+La sesión del panel de administración de Supabase es distinta de una cuenta de acceso a Luxury. La clave pública no es la contraseña de un usuario. Los botones de roles de demostración dejan de aparecer al configurar Supabase.
 
-1. Se copiaron los archivos de `build/web` sin modificar los originales de Descargas.
-2. Se ajustó `<base href>` de `index.html` a `/Sistema_GestionyControlLuxury/`.
-3. Se agregó `.nojekyll` y se comprimió el contenido como `luxury-web.zip`.
-4. Se subieron el archivo, esta guía y el flujo de publicación a un nuevo repositorio.
-5. Se activó GitHub Pages con GitHub Actions.
+Se verificó que existen las 14 tablas usadas por la aplicación, las 15 funciones RPC que invoca y las seis tablas de su suscripción Realtime. Las tablas tienen RLS habilitado. No se desactivaron esas protecciones ni se incluyeron claves secretas o `service_role` en la web.
 
-## Actualizar desde el código Flutter completo
+La aplicación conectada no carga los datos de ejemplo del navegador. Si falla la carga de datos al iniciar sesión, vuelve al acceso en lugar de mostrar un panel con datos de demostración.
 
-Ejecutar desde la carpeta que contiene `pubspec.yaml`:
+## Crear un acceso de Luxury si fuera necesario
+
+La persona que administra SBLuxury debe:
+
+1. Crear o comprobar la cuenta en **Authentication → Users** y que su correo esté confirmado.
+2. Comprobar en **Table Editor → usuarios** que existe el perfil con el mismo `id` de Auth, `nombre_completo`, `correo`, el `rol` correspondiente y `activo = true`.
+3. Facilitar las credenciales al integrante por un canal privado. No publicar contraseñas en este repositorio.
+
+## Compilar y actualizar
+
+Descomprimir `luxury-flutter-fuente.zip` y abrir la carpeta que contiene `pubspec.yaml`. Con Flutter instalado:
 
 ```sh
 flutter pub get
-flutter build web --release --base-href /Sistema_GestionyControlLuxury/
+flutter analyze
+flutter test
+flutter build web --release --base-href /Sistema_GestionyControlLuxury/ --dart-define-from-file=config/supabase.public.json
 ```
 
-Después comprimir el contenido de `build/web/` en un nuevo `luxury-web.zip`. Al abrir el ZIP, `index.html`, `main.dart.js`, `assets/` y `canvaskit/` deben estar en su raíz. Reemplazar el ZIP en GitHub mediante **Add file → Upload files → Commit changes** y esperar a que termine el flujo de la pestaña **Actions**.
+Comprimir **el contenido** de `build/web/` como `luxury-web.zip`: `index.html`, `main.dart.js`, `assets/` y `canvaskit/` deben quedar en la raíz del ZIP. Reemplazar ese archivo en GitHub mediante **Add file → Upload files → Commit changes**. La pestaña **Actions** muestra el resultado de la publicación.
 
-Abrir la aplicación mediante un servidor web; no basta con hacer doble clic en `index.html`.
+Mantener **Settings → Pages → Source → GitHub Actions**. El repositorio es público para utilizar GitHub Pages con el plan gratuito.
 
-La publicación web no comprueba por sí sola las funciones del sistema ni la conexión a sus servicios externos.
+Para desarrollar en local con Supabase:
+
+```sh
+flutter run -d chrome --dart-define-from-file=config/supabase.public.json
+```
+
+Compilar sin configuración abre el modo local de demostración; no usar esa compilación para reemplazar la versión conectada.
+
+## Verificación
+
+El análisis estático y las tres pruebas de acceso/carga pasaron antes de compilar. Consultar tablas y funciones confirma la estructura; la prueba completa de escritura desde la aplicación requiere iniciar sesión con una cuenta autorizada. Probar con un registro identificado como prueba y comprobarlo desde otra sesión antes de usar datos reales.
