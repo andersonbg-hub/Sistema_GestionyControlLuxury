@@ -57,4 +57,8 @@ Compilar sin configuración abre el modo local de demostración; no usar esa com
 
 ## Verificación
 
-El análisis estático y las tres pruebas de acceso/carga pasaron antes de compilar. Consultar tablas y funciones confirma la estructura; la prueba completa de escritura desde la aplicación requiere iniciar sesión con una cuenta autorizada. Probar con un registro identificado como prueba y comprobarlo desde otra sesión antes de usar datos reales.
+La versión 0.1.2 adapta encabezados y registros al ancho disponible. En pantallas pequeñas, las acciones aparecen debajo de la información; el selector «Sección» permite abrir todos los módulos de administración. Las estadísticas utilizan alturas naturales y las tarjetas del salón conservan espacio para el estado y la capacidad. También se adaptaron las listas de mesero, cocina y caja.
+
+Las pruebas de interfaz recorren las ocho secciones de administración, las tres pestañas de inventario y los espacios de mesero, cocina y caja. Se comprueban anchos de 320, 390, 600, 640, 768, 844 y 1280 píxeles, orientación vertical y horizontal, texto ampliado al 150 %, ausencia de errores de distribución y espacio suficiente para los nombres de los registros. También se abre una comanda y se agrega un producto para comprobar sus controles y desplazamiento. Se ejecutan con datos de demostración locales y no escriben en Supabase.
+
+Se mantienen las tres pruebas de conexión y acceso. Consultar tablas y funciones confirma la estructura; la prueba completa de escritura desde la aplicación requiere iniciar sesión con una cuenta autorizada y autorización para utilizar datos de prueba. La actualización del diseño no cambia datos, tablas, cuentas, funciones ni permisos de Supabase.
