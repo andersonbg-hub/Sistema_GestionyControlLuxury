@@ -1,0 +1,29 @@
+name: luxury_app
+description: Sistema de gestion y control Luxury conectado con Supabase.
+publish_to: none
+version: 0.1.2+3
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.12.0
+  shared_preferences: ^2.5.5
+  pdf: ^3.12.0
+  printing: ^5.14.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  http: ^1.6.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/portada_restaurante.png
+
+dependency_overrides:
+  image: '>=4.10.2 <4.11.0'
