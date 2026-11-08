@@ -20,21 +20,38 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - name: Descargar repositorio
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
+
+      - name: Instalar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Instalar dependencias
+        working-directory: luxury-flutter-fuente
+        run: flutter pub get
+
+      - name: Compilar web con los cambios recientes
+        working-directory: luxury-flutter-fuente
+        env:
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
+        run: |
+          flutter build web --release --base-href "/${REPOSITORY_NAME}/"
+          test -s build/web/index.html
+          test -s build/web/main.dart.js
 
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Preparar aplicacion Flutter compilada
+      - name: Preparar sitio actualizado
         run: |
-          test -d luxury-web
           mkdir -p _site
-          cp -a luxury-web/. _site/
-          test -s _site/index.html
-          test -s _site/main.dart.js
-          test -f _site/assets/FontManifest.json
+          cp -a luxury-flutter-fuente/build/web/. _site/
+          touch _site/.nojekyll
 
       - name: Subir sitio
         uses: actions/upload-pages-artifact@v4
