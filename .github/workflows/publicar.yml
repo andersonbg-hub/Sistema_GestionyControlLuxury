@@ -1,8 +1,9 @@
-name: Publicar Luxury en GitHub Pages
+name: Publicar Luxury actualizado en GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -22,7 +23,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Descargar repositorio
+      - name: Descargar codigo fuente
         uses: actions/checkout@v4
 
       - name: Instalar Flutter
@@ -31,33 +32,39 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Instalar dependencias
+      - name: Instalar dependencias del proyecto
         working-directory: luxury-flutter-fuente
         run: flutter pub get
 
-      - name: Compilar web con los cambios recientes
+      - name: Compilar version actual de Flutter Web
         working-directory: luxury-flutter-fuente
         env:
           REPOSITORY_NAME: ${{ github.event.repository.name }}
         run: |
-          flutter build web --release --base-href "/${REPOSITORY_NAME}/"
+          if [ "${REPOSITORY_NAME}" = "${GITHUB_REPOSITORY_OWNER}.github.io" ]; then
+            BASE_HREF="/"
+          else
+            BASE_HREF="/${REPOSITORY_NAME}/"
+          fi
+          flutter build web --release --base-href "$BASE_HREF"
           test -s build/web/index.html
           test -s build/web/main.dart.js
+          test -s build/web/assets/assets/images/portada_restaurante.png
 
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Preparar sitio actualizado
+      - name: Preparar sitio desde compilacion reciente
         run: |
           mkdir -p _site
           cp -a luxury-flutter-fuente/build/web/. _site/
           touch _site/.nojekyll
 
-      - name: Subir sitio
+      - name: Subir sitio compilado
         uses: actions/upload-pages-artifact@v4
         with:
           path: _site
 
-      - name: Publicar sitio
+      - name: Desplegar en GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
