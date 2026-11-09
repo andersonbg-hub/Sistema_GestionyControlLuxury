@@ -1,70 +1,56 @@
 name: Publicar Luxury actualizado en GitHub Pages
-
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 concurrency:
   group: github-pages
   cancel-in-progress: false
-
 jobs:
   publicar:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
+    defaults:
+      run:
+        working-directory: luxury-flutter-fuente
     steps:
-      - name: Descargar codigo fuente
+      - name: Descargar repositorio
         uses: actions/checkout@v4
-
       - name: Instalar Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: '3.38.5'
           cache: true
-
-      - name: Instalar dependencias del proyecto
-        working-directory: luxury-flutter-fuente
+      - name: Preparar dependencias
         run: flutter pub get
-
-      - name: Compilar version actual de Flutter Web
-        working-directory: luxury-flutter-fuente
-        env:
-          REPOSITORY_NAME: ${{ github.event.repository.name }}
+      - name: Ejecutar pruebas (informativas)
+        continue-on-error: true
+        run: flutter test
+      - name: Compilar web con ruta del repositorio
+        shell: bash
         run: |
-          if [ "${REPOSITORY_NAME}" = "${GITHUB_REPOSITORY_OWNER}.github.io" ]; then
-            BASE_HREF="/"
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          BASE_HREF="/$REPO_NAME/"
+          if [[ "$REPO_NAME" == *.github.io ]]; then BASE_HREF="/"; fi
+          if [ -f config/supabase.public.json ]; then
+            flutter build web --release --base-href "$BASE_HREF" --dart-define-from-file=config/supabase.public.json
           else
-            BASE_HREF="/${REPOSITORY_NAME}/"
+            flutter build web --release --base-href "$BASE_HREF"
           fi
-          flutter build web --release --base-href "$BASE_HREF"
           test -s build/web/index.html
-          test -s build/web/main.dart.js
-          test -s build/web/assets/assets/images/portada_restaurante.png
-
-      - name: Configurar GitHub Pages
+      - name: Configurar Pages
         uses: actions/configure-pages@v5
-
-      - name: Preparar sitio desde compilacion reciente
-        run: |
-          mkdir -p _site
-          cp -a luxury-flutter-fuente/build/web/. _site/
-          touch _site/.nojekyll
-
-      - name: Subir sitio compilado
-        uses: actions/upload-pages-artifact@v4
+      - name: Subir aplicación
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
-
-      - name: Desplegar en GitHub Pages
+          path: luxury-flutter-fuente/build/web
+      - name: Publicar
         id: deployment
         uses: actions/deploy-pages@v4

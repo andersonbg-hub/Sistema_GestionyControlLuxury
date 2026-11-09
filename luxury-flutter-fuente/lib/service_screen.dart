@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'app_widgets.dart';
 import 'models.dart';
@@ -165,6 +166,7 @@ class _WaiterScreenState extends State<WaiterScreen> {
   final Map<int, _CartLine> cart = {};
   RestaurantOrder? editingOrder;
   int? additionalParentId;
+  bool _submittingOrder = false;
 
   RestaurantStore get store => widget.store;
   RestaurantTable? get selectedTable =>
@@ -229,6 +231,16 @@ class _WaiterScreenState extends State<WaiterScreen> {
   }
 
   Future<void> _submitOrder() async {
+    if (_submittingOrder) return;
+    setState(() => _submittingOrder = true);
+    try {
+    await _submitOrderOnce();
+    } finally {
+      if (mounted) setState(() => _submittingOrder = false);
+    }
+  }
+
+  Future<void> _submitOrderOnce() async {
     final table = selectedTable;
     if (fulfillmentType == FulfillmentType.dineIn && table == null) {
       await showResultDialog(
@@ -245,6 +257,12 @@ class _WaiterScreenState extends State<WaiterScreen> {
         success: false,
         message: 'Indica el nombre y teléfono del cliente.',
       );
+      return;
+    }
+    if (fulfillmentType != FulfillmentType.dineIn &&
+        !RegExp(r'^\d{9}$').hasMatch(customerPhone.trim())) {
+      await showResultDialog(context, success: false,
+        message: 'Ingresa un teléfono móvil de 9 dígitos.');
       return;
     }
     if (fulfillmentType == FulfillmentType.delivery &&
@@ -653,7 +671,8 @@ class _WaiterScreenState extends State<WaiterScreen> {
                 TextFormField(
                   initialValue: customerPhone,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(labelText: 'Teléfono'),
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(9)],
+                  decoration: const InputDecoration(labelText: 'Teléfono (9 dígitos)'),
                   onChanged: (value) => customerPhone = value,
                 ),
                 if (fulfillmentType == FulfillmentType.delivery) ...[
@@ -1160,7 +1179,7 @@ class _WaiterScreenState extends State<WaiterScreen> {
   );
 
   Widget _orderSubmitButton() => FilledButton.icon(
-    onPressed: cart.isEmpty ? null : _submitOrder,
+    onPressed: cart.isEmpty || _submittingOrder ? null : _submitOrder,
     icon: const Icon(Icons.send_rounded),
     label: Text(editingOrder != null ? 'Guardar cambios' : 'Enviar a cocina'),
   );
@@ -1502,7 +1521,9 @@ class _KitchenScreenState extends State<KitchenScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Incidencia · Pedido #${order.id}'),
-        content: TextField(
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420, maxHeight: 220),
+          child: SingleChildScrollView(child: TextField(
           controller: controller,
           autofocus: true,
           minLines: 2,
@@ -1510,8 +1531,9 @@ class _KitchenScreenState extends State<KitchenScreen> {
           maxLength: 240,
           decoration: const InputDecoration(
             labelText: 'Motivo',
-            hintText: 'Describe el problema para administración y caja',
+            hintText: 'Describe el problema del pedido',
           ),
+          )),
         ),
         actions: [
           TextButton(
@@ -1533,73 +1555,65 @@ class _KitchenScreenState extends State<KitchenScreen> {
 
   Future<void> _createAlert() async {
     final message = TextEditingController();
-    InventoryItem? selectedItem = store.inventory
-        .where((item) => item.active && item.lowStock)
-        .firstOrNull;
-    final result = await showDialog<(InventoryItem?, String)>(
+    final selected = <int>{};
+    final activeItems = store.inventory.where((item) => item.active).toList();
+    final result = await showDialog<String>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Aviso de cocina'),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('Aviso de bajo stock'),
           content: SizedBox(
-            width: 420,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<InventoryItem?>(
-                  initialValue: selectedItem,
-                  decoration: const InputDecoration(
-                    labelText: 'Insumo relacionado (opcional)',
-                  ),
-                  items: [
-                    const DropdownMenuItem<InventoryItem?>(
-                      value: null,
-                      child: Text('Aviso general'),
+            width: 450,
+            child: SingleChildScrollView(
+              child: Column(mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('Selecciona uno o varios insumos afectados:'),
+                  const SizedBox(height: 8),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 210),
+                    child: ListView(shrinkWrap: true,
+                      children: activeItems.map((item) => CheckboxListTile(
+                        dense: true,
+                        title: Text(item.name),
+                        subtitle: Text('${item.quantity} ${item.unit} · mínimo ${item.minimum}'),
+                        value: selected.contains(item.id),
+                        onChanged: (checked) => setDialogState(() {
+                          if (checked == true) { selected.add(item.id); }
+                          else { selected.remove(item.id); }
+                        }),
+                      )).toList(),
                     ),
-                    ...store.inventory
-                        .where((item) => item.active)
-                        .map(
-                          (item) => DropdownMenuItem(
-                            value: item,
-                            child: Text(item.name),
-                          ),
-                        ),
-                  ],
-                  onChanged: (value) =>
-                      setDialogState(() => selectedItem = value),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: message,
-                  minLines: 2,
-                  maxLines: 4,
-                  maxLength: 240,
-                  decoration: const InputDecoration(
-                    labelText: 'Detalle del aviso',
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  TextField(controller: message, minLines: 2, maxLines: 4,
+                    maxLength: 240,
+                    decoration: const InputDecoration(labelText: 'Detalle general del aviso')),
+                ]),
+              ),
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.pop(context, (selectedItem, message.text.trim())),
-              child: const Text('Enviar a administración'),
-            ),
+            TextButton(onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar')),
+            FilledButton(onPressed: () {
+              final details = selected.isEmpty ? 'Aviso general' :
+                activeItems.where((item) => selected.contains(item.id))
+                  .map((item) => '${item.name} (${item.quantity} ${item.unit})').join(', ');
+              final text = '$details. ${message.text.trim()}'.trim();
+              if (text.length > 240) {
+                ScaffoldMessenger.of(dialogContext).showSnackBar(const SnackBar(
+                  content: Text('El aviso supera 240 caracteres. Reduce el detalle.')));
+                return;
+              }
+              Navigator.pop(dialogContext, text);
+            }, child: const Text('Enviar aviso')),
           ],
         ),
       ),
     );
     message.dispose();
     if (result != null) {
-      await _run(
-        () => store.createKitchenAlert(item: result.$1, message: result.$2),
-      );
+      await _run(() => store.createKitchenAlert(item: null, message: result));
     }
   }
 

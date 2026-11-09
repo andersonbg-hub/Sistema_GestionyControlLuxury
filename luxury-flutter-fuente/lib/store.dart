@@ -1062,6 +1062,10 @@ class RestaurantStore extends ChangeNotifier {
         (customerName.trim().isEmpty || customerPhone.trim().isEmpty)) {
       throw StateError('Indica el nombre y teléfono del cliente.');
     }
+    if (fulfillmentType != FulfillmentType.dineIn &&
+        !RegExp(r'^\d{9}$').hasMatch(customerPhone.trim())) {
+      throw StateError('El teléfono debe tener exactamente 9 dígitos.');
+    }
     if (fulfillmentType == FulfillmentType.delivery &&
         deliveryAddress.trim().isEmpty) {
       throw StateError('Indica la dirección de entrega.');

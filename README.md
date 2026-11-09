@@ -4,13 +4,16 @@ Aplicación Flutter conectada al proyecto **SBLuxury** de Supabase.
 
 **Abrir aplicación:** https://andersonbg-hub.github.io/Sistema_GestionyControlLuxury/
 
-## Archivos del repositorio de publicación
+## Organización y publicación actual
 
-- `luxury-web.zip`: versión web compilada con la configuración de Supabase.
-- `luxury-flutter-fuente.zip`: proyecto Flutter editable, con `lib/`, `pubspec.yaml`, dependencias fijadas, configuración pública y pruebas.
-- `.github/workflows/publicar.yml`: publica automáticamente el contenido de `luxury-web.zip` en GitHub Pages cuando se actualiza `main`.
+- `luxury-flutter-fuente/`: código fuente editable y configuración web. Es la única fuente publicada.
+- `.github/workflows/publicar.yml`: ejecuta dependencias y pruebas, recompila Flutter desde la fuente y despliega `build/web` en GitHub Pages.
+- `luxury-web/`: compilación histórica retirada del paquete actualizado; no se necesita para publicar.
 
-Los siete archivos Dart originales se recuperaron de la tabla de fuentes de la caché Dart Kernel que acompañaba a la compilación. Se reconstruyeron los archivos de proyecto y la plataforma web. No se reemplazó la interfaz por otra aplicación.
+Para ejecutar localmente: `cd luxury-flutter-fuente`, `flutter pub get`, `flutter run -d chrome`.
+La publicación utiliza `config/supabase.public.json` con la configuración pública correspondiente. Nunca subir una clave de servicio.
+
+**Nota de alcance:** los informes de mejoras incluyen requisitos propuestos; no todos implican funciones ya implementadas. Ver `INFORME_AVANCE_Y_CORRECCIONES.docx`.
 
 ## Conexión y acceso
 

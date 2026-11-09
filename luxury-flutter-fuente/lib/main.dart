@@ -318,7 +318,10 @@ class _LoginScreenState extends State<_LoginScreen> {
     try {
       await store.signIn(normalizedEmail, password.text);
     } catch (exception) {
-      setState(() => error = '$exception');
+      if (mounted) {
+        setState(() => error =
+          'No fue posible iniciar sesión. Verifica tus datos e inténtalo nuevamente.');
+      }
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -559,6 +562,7 @@ class _LoginScreenState extends State<_LoginScreen> {
             },
             decoration: InputDecoration(
               labelText: 'Correo',
+              floatingLabelBehavior: FloatingLabelBehavior.always,
               prefixIcon: const Icon(Icons.alternate_email),
               suffixIcon: emailError == null
                   ? null
@@ -592,6 +596,7 @@ class _LoginScreenState extends State<_LoginScreen> {
             },
             decoration: InputDecoration(
               labelText: 'Contraseña',
+              floatingLabelBehavior: FloatingLabelBehavior.always,
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: passwordError == null
                   ? null
@@ -629,12 +634,12 @@ class _LoginScreenState extends State<_LoginScreen> {
               child: Text(busy ? 'Conectando…' : 'Iniciar sesión'),
             ),
           ),
-          Align(
-            alignment: Alignment.center,
-            child: TextButton(
-              onPressed: busy ? null : _sendPasswordRecovery,
-              style: TextButton.styleFrom(foregroundColor: luxuryGold),
-              child: const Text('¿Olvidaste tu contraseña?'),
+          const Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: Center(
+              child: Text('Para recuperar tu acceso, comunícate con el administrador.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: Colors.white70)),
             ),
           ),
         ] else ...[
