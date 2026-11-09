@@ -1591,7 +1591,6 @@ class _KitchenScreenState extends State<KitchenScreen> {
                 ]),
               ),
             ),
-          ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancelar')),
