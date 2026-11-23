@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/">
+
+  <meta charset="UTF-8">
+  <meta name="theme-color" content="#2a0f0d">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Sistema de gestión y control del restaurante Luxury.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Luxury">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/luxury-touch-180.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-luxury-16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-luxury-32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="favicon-luxury-48.png">
+
+  <title>Luxury · Restaurante Oriental</title>
+  <link rel="manifest" href="manifest.json?v=luxury-logo">
+  <style>
+    body { margin: 0; background: #f5f0eb; }
+    #luxury-startup {
+      position: fixed; inset: 0; z-index: 20; display: grid; place-items: center;
+      padding: 24px; background: #2a0f0d; color: #f5f0eb;
+      font: 16px system-ui, sans-serif; text-align: center;
+    }
+    #luxury-startup strong { letter-spacing: .2em; font-size: 24px; }
+    #luxury-startup .load-line {
+      height: 4px; margin: 18px auto 0; width: 190px; border-radius: 4px;
+      overflow: hidden; background: #634133;
+    }
+    #luxury-startup .load-line::before {
+      content: ''; height: 100%; width: 42%; display: block;
+      background: #e48424; border-radius: inherit;
+      animation: luxury-loading 1.25s ease-in-out infinite alternate;
+    }
+    #luxury-startup button {
+      border: 0; border-radius: 8px; background: #e48424; color: #2a0f0d;
+      padding: 10px 16px; font: inherit; cursor: pointer;
+    }
+    #luxury-startup.failed .load-line { display: none; }
+    @keyframes luxury-loading { to { transform: translateX(140%); } }
+    @media (prefers-reduced-motion: reduce) {
+      #luxury-startup .load-line::before { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="luxury-startup">
+    <div>
+      <strong>LUXURY</strong>
+      <div class="load-line" aria-hidden="true"></div>
+      <p id="startup-status" role="status">Cargando el sistema…</p>
+      <button id="startup-retry" type="button" hidden>Reintentar</button>
+    </div>
+  </div>
+  <script>
+    const startup = document.getElementById('luxury-startup');
+    const retry = document.getElementById('startup-retry');
+    retry.addEventListener('click', () => location.reload());
+    window.showLuxuryStartupError = () => {
+      startup.classList.add('failed');
+      document.getElementById('startup-status').textContent = 'Luxury tardó en abrir. Vuelve a intentarlo.';
+      retry.hidden = false;
+    };
+    const startupTimer = setTimeout(window.showLuxuryStartupError, 35000);
+    window.addEventListener('flutter-first-frame', () => {
+      clearTimeout(startupTimer);
+      startup.remove();
+    }, { once: true });
+  </script>
+  <script src="flutter_bootstrap.js" async onerror="window.showLuxuryStartupError()"></script>
+</body>
+</html>

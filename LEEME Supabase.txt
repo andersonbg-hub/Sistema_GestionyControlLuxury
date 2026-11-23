@@ -1,0 +1,14 @@
+Luxury · Cambios para Supabase
+
+Esta revisión separa la preparación de cocina de la entrega de bebidas y postres.
+En SBLuxury abre SQL Editor, crea una consulta, pega el archivo completo
+supabase/migrations/20261123100000_Separar_preparacion_de_servicio.sql y pulsa Run.
+Úsalo sobre un proyecto que ya tenga las migraciones anteriores de Luxury.
+
+Para turnos de caja, la migración existente es
+supabase/migrations/20261122200000_Abrir_turno_caja_en_hora_de_Lima.sql.
+Aplícala por separado si aún falta en el proyecto.
+
+manage-staff se despliega como Edge Function. SQL Editor se usa para las
+migraciones de la base de datos. Si gestionas las migraciones con Supabase CLI,
+evita ejecutar los mismos archivos también desde el editor.
