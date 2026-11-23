@@ -1,9 +1,0 @@
-.DS_Store
-Thumbs.db
-*.log
-.env
-.env.*
-!.env.example
-*.jks
-*.keystore
-key.properties
